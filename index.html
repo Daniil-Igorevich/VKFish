@@ -341,8 +341,8 @@
             color: #e1e3e6;
         }
 
-        /* Модальное окно */
-        .alert-modal {
+        /* Модальное окно (Общее) */
+        .modal {
             display: none;
             position: fixed;
             top: 0;
@@ -355,7 +355,7 @@
             z-index: 1000;
             backdrop-filter: blur(4px);
         }
-        .alert-content {
+        .modal-content {
             background-color: #19191a;
             padding: 32px;
             border-radius: 16px;
@@ -364,6 +364,8 @@
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+
+        /* Окно предупреждения */
         .alert-content h2 {
             color: #ff453a;
             margin-bottom: 16px;
@@ -381,37 +383,15 @@
             margin-bottom: 16px;
             display: block;
         }
-        .alert-content button {
+        .btn-danger {
             background-color: #ff453a;
             color: #ffffff;
         }
-        .alert-content button:hover {
+        .btn-danger:hover {
             background-color: #d9382f;
         }
 
-        /* Модальное окно для показа QR-кода */
-        .qr-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            backdrop-filter: blur(4px);
-        }
-        .qr-content {
-            background-color: #19191a;
-            padding: 32px;
-            border-radius: 16px;
-            width: 320px;
-            text-align: center;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+        /* Окно с QR-кодом */
         .qr-content h2 {
             color: #ffffff;
             margin-bottom: 16px;
@@ -422,21 +402,37 @@
             color: #828282;
             margin-bottom: 16px;
         }
-        .qr-image {
+        #qrcode {
             width: 200px;
             height: 200px;
             background-color: #fff;
             padding: 10px;
             border-radius: 12px;
             margin: 0 auto 20px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #qrcode img {
             display: block;
         }
-        .qr-content button {
+        .btn-close {
             background-color: #3a3a3c;
             color: #ffffff;
+            margin-bottom: 12px;
         }
-        .qr-content button:hover {
+        .btn-close:hover {
             background-color: #4a4a4c;
+        }
+        .btn-test {
+            background-color: transparent;
+            border: 1px solid #3a3a3c;
+            color: #e1e3e6;
+            font-size: 13px;
+            height: 36px;
+        }
+        .btn-test:hover {
+            background-color: #232324;
         }
     </style>
 </head>
@@ -551,48 +547,70 @@
     </footer>
 
     <!-- Модальное окно предупреждения -->
-    <div id="alert-modal" class="alert-modal">
-        <div class="alert-content">
+    <div id="alert-modal" class="modal">
+        <div class="modal-content alert-content">
             <h2>⚠️ Вы передали данные мошенникам</h2>
             <img src="mem.gif" alt="Кот" class="mem-gif">
             <p>В реальной ситуации ваш аккаунт был бы украден. Никогда не вводите свои данные на подозрительных сайтах и всегда проверяйте адресную строку браузера!</p>
-            <button type="button" onclick="closeAlert()">Я понял</button>
+            <button type="button" class="btn-danger" onclick="closeAlert()">Я понял</button>
         </div>
     </div>
 
     <!-- Модальное окно с QR-кодом -->
-    <div id="qr-modal" class="qr-modal">
-        <div class="qr-content">
+    <div id="qr-modal" class="modal">
+        <div class="modal-content qr-content">
             <h2>Вход по QR-коду</h2>
             <p>Отсканируйте код камерой телефона</p>
-            <img id="qr-image" src="" alt="QR-код" class="qr-image">
-            <button type="button" onclick="closeQrModal()">Закрыть</button>
+            <div id="qrcode"></div>
+            <button type="button" class="btn-close" onclick="closeQrModal()">Закрыть</button>
+            
+            <!-- Кнопка для теста без телефона -->
+            <button type="button" class="btn-test" onclick="testAlert()">Открыть тестовую ссылку (симуляция сканирования)</button>
         </div>
     </div>
 
+    <!-- Подключаем легкую библиотеку для генерации QR-кода -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <script>
-        // 1. Функция генерации QR-кода
-        // Берем текущий URL страницы, добавляем параметр ?alert=true и кодируем в QR
-        function generateQrCode() {
-            const currentUrl = window.location.href.split('?')[0]; // Убираем старые параметры, если есть
-            const targetUrl = currentUrl + '?alert=true';
-            
-            // Используем API для генерации QR-кодов
-            const qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(targetUrl);
-            
-            document.getElementById('qr-image').src = qrApiUrl;
-        }
+        // --- 1. ЛОГИКА QR-КОДА ---
+        let qrcode = null;
 
         function showQrModal() {
-            generateQrCode();
             document.getElementById('qr-modal').style.display = 'flex';
+            
+            // Генерируем ссылку (берем текущий адрес и добавляем ?alert=true)
+            const currentUrl = window.location.href.split('?')[0];
+            const targetUrl = currentUrl + '?alert=true';
+
+            // Очищаем контейнер перед генерацией (если открываем повторно)
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+
+            // Генерируем QR-код локально
+            qrcode = new QRCode(qrContainer, {
+                text: targetUrl,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
         }
 
         function closeQrModal() {
             document.getElementById('qr-modal').style.display = 'none';
         }
 
-        // 2. Логика переключения вкладок
+        // --- 2. ТЕСТОВАЯ ФУНКЦИЯ (Симуляция сканирования) ---
+        function testAlert() {
+            // Закрываем окно с QR
+            closeQrModal();
+            // Показываем окно мошенников
+            showAlert();
+        }
+
+        // --- 3. ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК ---
         function switchTab(type) {
             const tabPhone = document.getElementById('tab-phone');
             const tabEmail = document.getElementById('tab-email');
@@ -612,10 +630,9 @@
             }
         }
 
-        // 3. Функции для показа/скрытия окна предупреждения
+        // --- 4. ЛОГИКА ОКНА ПРЕДУПРЕЖДЕНИЯ ---
         function showAlert() {
             document.getElementById('alert-modal').style.display = 'flex';
-            // Очищаем поля ввода при попытке "входа"
             document.getElementById('phone').value = '';
             document.getElementById('email').value = '';
         }
@@ -624,8 +641,8 @@
             document.getElementById('alert-modal').style.display = 'none';
         }
 
-        // 4. ПРОВЕРКА ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
-        // Если в URL есть ?alert=true (значит пользователь перешел по QR-коду), показываем предупреждение
+        // --- 5. ПРОВЕРКА ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ---
+        // Если в URL есть ?alert=true (пользователь перешел по QR), сразу показываем предупреждение
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('alert') === 'true') {
