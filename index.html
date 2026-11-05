@@ -438,17 +438,12 @@
             background-color: #4a4a4c;
         }
 
-        /* --- АДАПТИВНОСТЬ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ --- */
+        /* --- АДАПТИВНОСТЬ --- */
+
+        /* Мобильная адаптация по ширине (для небольших экранов) */
         @media (max-width: 768px) {
-            .header {
-                display: none; 
-            }
-
-            /* СКРЫВАЕМ ДЕКОРАТИВНЫЕ ЛИНИИ НА ТЕЛЕФОНАХ */
-            .background-lines {
-                display: none;
-            }
-
+            .header { display: none; }
+            
             .main-content {
                 padding: 16px;
                 justify-content: flex-start;
@@ -463,7 +458,6 @@
                 max-width: 100%;
             }
 
-            /* Подвал выстраиваем в колонку по центру */
             .footer {
                 flex-direction: column;
                 gap: 16px;
@@ -477,8 +471,13 @@
                 gap: 12px;
             }
 
-            .modal-content {
-                padding: 24px;
+            .modal-content { padding: 24px; }
+        }
+
+        /* Скрываем линии на ЛЮБОМ устройстве в вертикальной ориентации (портретный режим) */
+        @media (orientation: portrait) {
+            .background-lines {
+                display: none;
             }
         }
     </style>
