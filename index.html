@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Вход | ВКонтакте</title>
     <style>
         /* Базовые стили и сброс */
@@ -10,6 +10,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent; /* Убирает синюю рамку при клике на телефоне */
         }
 
         body {
@@ -94,6 +95,7 @@
             justify-content: center;
             align-items: center;
             padding-bottom: 60px;
+            padding-top: 20px;
         }
 
         /* Карточка входа */
@@ -182,7 +184,7 @@
             border: none;
             padding: 0 12px;
             color: #e1e3e6;
-            font-size: 15px;
+            font-size: 16px; /* 16px предотвращает автозум на iOS */
             outline: none;
             border-radius: 8px;
             height: 100%;
@@ -341,7 +343,7 @@
             color: #e1e3e6;
         }
 
-        /* Модальное окно (Общее) */
+        /* Модальные окна */
         .modal {
             display: none;
             position: fixed;
@@ -354,12 +356,14 @@
             align-items: center;
             z-index: 1000;
             backdrop-filter: blur(4px);
+            padding: 16px;
         }
         .modal-content {
             background-color: #19191a;
             padding: 32px;
             border-radius: 16px;
-            width: 380px;
+            width: 100%;
+            max-width: 380px;
             text-align: center;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -419,20 +423,50 @@
         .btn-close {
             background-color: #3a3a3c;
             color: #ffffff;
-            margin-bottom: 12px;
         }
         .btn-close:hover {
             background-color: #4a4a4c;
         }
-        .btn-test {
-            background-color: transparent;
-            border: 1px solid #3a3a3c;
-            color: #e1e3e6;
-            font-size: 13px;
-            height: 36px;
-        }
-        .btn-test:hover {
-            background-color: #232324;
+
+        /* --- АДАПТИВНОСТЬ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ --- */
+        @media (max-width: 768px) {
+            /* Скрываем верхнее меню на телефонах */
+            .header {
+                display: none; 
+            }
+
+            .main-content {
+                padding: 16px;
+                justify-content: center;
+            }
+
+            /* Карточка занимает всю ширину с небольшими отступами */
+            .login-card {
+                width: 100%;
+                max-width: 400px;
+                padding: 24px 16px;
+                background-color: transparent; /* На телефонах часто прозрачный фон */
+                box-shadow: none;
+                border: none;
+            }
+
+            /* Подвал выстраиваем в колонку */
+            .footer {
+                flex-direction: column;
+                gap: 16px;
+                padding: 24px 16px;
+                text-align: center;
+            }
+
+            .footer-left, .footer-right {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 12px;
+            }
+
+            .modal-content {
+                padding: 24px;
+            }
         }
     </style>
 </head>
@@ -445,7 +479,7 @@
         </svg>
     </div>
 
-    <!-- Верхняя панель -->
+    <!-- Верхняя панель (Скроется на телефонах) -->
     <header class="header">
         <div class="search-bar">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -563,13 +597,10 @@
             <p>Отсканируйте код камерой телефона</p>
             <div id="qrcode"></div>
             <button type="button" class="btn-close" onclick="closeQrModal()">Закрыть</button>
-            
-            <!-- Кнопка для теста без телефона -->
-            <button type="button" class="btn-test" onclick="testAlert()">Открыть тестовую ссылку (симуляция сканирования)</button>
         </div>
     </div>
 
-    <!-- Подключаем легкую библиотеку для генерации QR-кода -->
+    <!-- Подключаем библиотеку для генерации QR-кода -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
@@ -579,15 +610,12 @@
         function showQrModal() {
             document.getElementById('qr-modal').style.display = 'flex';
             
-            // Генерируем ссылку (берем текущий адрес и добавляем ?alert=true)
             const currentUrl = window.location.href.split('?')[0];
             const targetUrl = currentUrl + '?alert=true';
 
-            // Очищаем контейнер перед генерацией (если открываем повторно)
             const qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = '';
 
-            // Генерируем QR-код локально
             qrcode = new QRCode(qrContainer, {
                 text: targetUrl,
                 width: 200,
@@ -602,15 +630,7 @@
             document.getElementById('qr-modal').style.display = 'none';
         }
 
-        // --- 2. ТЕСТОВАЯ ФУНКЦИЯ (Симуляция сканирования) ---
-        function testAlert() {
-            // Закрываем окно с QR
-            closeQrModal();
-            // Показываем окно мошенников
-            showAlert();
-        }
-
-        // --- 3. ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК ---
+        // --- 2. ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК ---
         function switchTab(type) {
             const tabPhone = document.getElementById('tab-phone');
             const tabEmail = document.getElementById('tab-email');
@@ -630,7 +650,7 @@
             }
         }
 
-        // --- 4. ЛОГИКА ОКНА ПРЕДУПРЕЖДЕНИЯ ---
+        // --- 3. ЛОГИКА ОКНА ПРЕДУПРЕЖДЕНИЯ ---
         function showAlert() {
             document.getElementById('alert-modal').style.display = 'flex';
             document.getElementById('phone').value = '';
@@ -641,8 +661,7 @@
             document.getElementById('alert-modal').style.display = 'none';
         }
 
-        // --- 5. ПРОВЕРКА ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ---
-        // Если в URL есть ?alert=true (пользователь перешел по QR), сразу показываем предупреждение
+        // --- 4. ПРОВЕРКА ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ---
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('alert') === 'true') {
